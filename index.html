@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Car Game Mobile Control</title>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #333;
+  font-family: Arial;
+  color: white;
+}
+
+#gameArea {
+  width: 400px;
+  height: 100vh;
+  margin: auto;
+  background: #555;
+  position: relative;
+  overflow: hidden;
+}
+
+.car {
+  width: 50px;
+  height: 100px;
+  position: absolute;
+  bottom: 20px;
+  background: red;
+  border-radius: 10px;
+}
+
+.enemy {
+  width: 50px;
+  height: 100px;
+  position: absolute;
+  background: yellow;
+  border-radius: 10px;
+}
+
+#score {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 20px;
+}
+
+#gameOver {
+  position: absolute;
+  top: 40%;
+  width: 100%;
+  text-align: center;
+  font-size: 30px;
+  display: none;
+}
+
+/* 🔥 CONTROLS */
+#controls {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.btn {
+  width: 80px;
+  height: 80px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  text-align: center;
+  line-height: 80px;
+  font-size: 30px;
+  user-select: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="gameArea">
+  <div id="score">Score: 0</div>
+  <div id="gameOver">GAME OVER<br>Press R to Restart</div>
+
+  <!-- ✅ BUTTONS ALREADY ADDED -->
+  <div id="controls">
+    <div class="btn" id="leftBtn">⬅️</div>
+    <div class="btn" id="rightBtn">➡️</div>
+  </div>
+</div>
+
+<script>
+const gameArea = document.getElementById("gameArea");
+const scoreDisplay = document.getElementById("score");
+const gameOverText = document.getElementById("gameOver");
+
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
+
+let player = document.createElement("div");
+player.classList.add("car");
+gameArea.appendChild(player);
+
+let keys = { ArrowLeft: false, ArrowRight: false };
+let speed = 5;
+let score = 0;
+let enemies = [];
+
+player.style.left = "175px";
+
+/* keyboard */
+document.addEventListener("keydown", (e) => {
+  keys[e.key] = true;
+  if (e.key === "r" || e.key === "R") restartGame();
+});
+document.addEventListener("keyup", (e) => {
+  keys[e.key] = false;
+});
+
+/* 🔥 TOUCH CONTROLS */
+leftBtn.addEventListener("touchstart", () => keys.ArrowLeft = true);
+leftBtn.addEventListener("touchend", () => keys.ArrowLeft = false);
+
+rightBtn.addEventListener("touchstart", () => keys.ArrowRight = true);
+rightBtn.addEventListener("touchend", () => keys.ArrowRight = false);
+
+/* mouse (PC) */
+leftBtn.addEventListener("mousedown", () => keys.ArrowLeft = true);
+leftBtn.addEventListener("mouseup", () => keys.ArrowLeft = false);
+
+rightBtn.addEventListener("mousedown", () => keys.ArrowRight = true);
+rightBtn.addEventListener("mouseup", () => keys.ArrowRight = false);
+
+/* enemy */
+function createEnemy() {
+  let enemy = document.createElement("div");
+  enemy.classList.add("enemy");
+  enemy.style.top = "-100px";
+  enemy.style.left = Math.floor(Math.random() * 350) + "px";
+  gameArea.appendChild(enemy);
+  enemies.push(enemy);
+}
+
+function movePlayer() {
+  let left = player.offsetLeft;
+
+  if (keys.ArrowLeft && left > 0) {
+    player.style.left = left - speed + "px";
+  }
+  if (keys.ArrowRight && left < 350) {
+    player.style.left = left + speed + "px";
+  }
+}
+
+function moveEnemies() {
+  enemies.forEach((enemy, index) => {
+    let top = enemy.offsetTop;
+    enemy.style.top = top + speed + "px";
+
+    if (isCollide(player, enemy)) {
+      endGame();
+    }
+
+    if (top > 600) {
+      enemy.remove();
+      enemies.splice(index, 1);
+      score++;
+    }
+  });
+}
+
+function isCollide(a, b) {
+  let aRect = a.getBoundingClientRect();
+  let bRect = b.getBoundingClientRect();
+
+  return !(
+    aRect.bottom < bRect.top ||
+    aRect.top > bRect.bottom ||
+    aRect.right < bRect.left ||
+    aRect.left > bRect.right
+  );
+}
+
+let gameInterval;
+
+function startGame() {
+  gameInterval = setInterval(() => {
+    movePlayer();
+    moveEnemies();
+
+    if (Math.random() < 0.03) createEnemy();
+
+    scoreDisplay.innerText = "Score: " + score;
+
+    if (score % 10 === 0) speed += 0.01;
+
+  }, 20);
+}
+
+function endGame() {
+  clearInterval(gameInterval);
+  gameOverText.style.display = "block";
+}
+
+function restartGame() {
+  location.reload();
+}
+
+startGame();
+</script>
+
+</body>
+</html>
